@@ -12,6 +12,27 @@ app.use(cors());
 const repositories = [];
 const likes = 0;
 
+function logResquest (request, response, next){
+  const {method, url} = request;
+  const logLabel=`[${method.toUpperCase()}]${url}`;
+
+  console.time(logLabel);
+  next();
+  console.timeEnd(logLabel);
+}
+
+function validateRepositoryId(request, response , next){
+  const {id }= request.params;
+
+  if(!isUuid(id)){
+      return response.status(400).json({error:"invalid id Respository"});
+  }
+  return next();
+}
+app.use(logResquest);
+app.use('/repositories/:id/like', validateRepositoryId);
+app.use('/repositories/:id', validateRepositoryId);
+
 app.get("/repositories", (request, response) => {
 
   return response.json(repositories);
@@ -35,7 +56,7 @@ app.put("/repositories/:id", (request, response) => {
 
   const repositorieIndex = repositories.findIndex(repo=>repo.id===id);
   if (repositorieIndex < 0){
-    return request.status(400).json({ error:'id not found'});
+    return request.status(400).json()
   }
   const repo ={ id, title, techs, url,likes};
  repositories[repositorieIndex] = repo;
@@ -51,7 +72,7 @@ app.delete("/repositories/:id", (request, response) => {
   const {id} = request.params;
   const repositorieIndex = repositories.findIndex(repo=>repo.id===id);
   if (repositorieIndex < 0){
-    return request.status(400).json({ error:'repositorie not found'})}
+    return request.status(400).json()}
   
     repositories.splice(repositorieIndex,1);
     return response.status(204).send();
